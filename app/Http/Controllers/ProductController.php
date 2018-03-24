@@ -186,4 +186,180 @@ class ProductController extends Controller
             ]
         ]);
     }
+    public function createProduct(Request $request){
+        $idSeller = $request->input('user_id');
+        $name = $request->input('name');
+        $price = $request->input('price');
+        $descri = $request->input('described');
+        $idCategory = $request->input('category_id');
+        $image = $request->input('image');
+        $address = $request->input('address');
+        $dimen = $request->input('dimension');
+        $weight = $request->input('weight');
+        $status = $request->input('status');
+        if(!empty($idSeller)&&!empty($name)&&!empty($price)&&!empty($descri)&&!empty($idCategory)&&!empty($image)
+            &&!empty($address)&&!empty($dimen)&&!empty($weight)&&!empty($status)){
+            $product = Product::create([
+                'seller_id'=>$idSeller,
+                'name'=>$name,
+                'price'=>$price,
+                'category_id'=>$idCategory,
+                'image'=>$image,
+                'described'=>$descri,
+                'ships_from'=>$address,
+                'dimension'=>$dimen,
+                'weight'=>$weight,
+                'status'=>$status
+            ]);
+            if($product){
+                return response([
+                    'code' => 200,
+                    'message' => "Success",
+                ]);
+            }
+            if($product){
+                return response([
+                    'code' => 400,
+                    'message' => "Failure",
+                ]);
+            }
+        }
+        return response([
+            'code' => 1002,
+            'message' => 'Parameter is no enough',
+        ]);
+    }
+    public function buyProduct(Request $request){
+        $idProduct = $request->input('product_id');
+        $idCustomer = $request->input('customer_id');
+        if(!empty($idProduct)&&!empty($idCustomer)){
+            $product = Product::where('id',$idProduct)->update([
+                'customer_id'=>$idCustomer,
+                'is_sold'=>1
+            ]);
+            if($product){
+                return response([
+                    'code' => 200,
+                    'message' => "Success",
+                ]);
+            }
+        }
+        return response([
+            'code' => 1002,
+            'message' => 'Parameter is no enough',
+        ]);
+    }
+    public function sellProduct(Request $request){
+        $idProduct = $request->input('product_id');
+        if(!empty($idProduct)){
+            $product = Product::where('id',$idProduct)->update([
+                'is_sold'=>2
+            ]);
+            if($product){
+                return response([
+                    'code' => 200,
+                    'message' => "Success",
+                ]);
+            }
+        }
+        return response([
+            'code' => 1002,
+            'message' => 'Parameter is no enough',
+        ]);
+    }
+    public function cancelSellProduct(Request $request){
+        $idProduct = $request->input('product_id');
+        if(!empty($idProduct)){
+            $product = Product::where('id',$idProduct)->update([
+                'is_sold'=>0,
+                'customer_id'=>0
+            ]);
+            if($product){
+                return response([
+                    'code' => 200,
+                    'message' => "Success",
+                ]);
+            }
+        }
+        return response([
+            'code' => 1002,
+            'message' => 'Parameter is no enough',
+        ]);
+    }
+    public function getProductSellProcessing(Request $request){
+        $idSeller = $request->input('user_id');
+        if(!empty($idSeller)){
+            $products  = Product::select('id','image','name','price')->where('seller_id',$idSeller)->where('is_sold',1)->get();
+            if($products){
+                return response([
+                    'code' => 200,
+                    'message' => "Success",
+                    'data'=>[
+                        'products'=>$products
+                    ]
+                ]);
+            }
+        }
+        return response([
+            'code' => 1002,
+            'message' => 'Parameter is no enough',
+        ]);
+    }
+    public function getProductSellSuccess(Request $request){
+        $idSeller = $request->input('user_id');
+        if(!empty($idSeller)){
+            $products  = Product::select('id','image','name','price')->where('seller_id',$idSeller)->where('is_sold',2)->get();
+            if($products){
+                return response([
+                    'code' => 200,
+                    'message' => "Success",
+                    'data'=>[
+                        'products'=>$products
+                    ]
+                ]);
+            }
+        }
+        return response([
+            'code' => 1002,
+            'message' => 'Parameter is no enough',
+        ]);
+    }
+    public function getProductBuyProcessing(Request $request){
+        $idCustomer = $request->input('customer_id');
+        if(!empty($idCustomer)){
+            $products  = Product::select('id','image','name','price')->where('customer_id',$idCustomer)->where('is_sold',1)->get();
+            if($products){
+                return response([
+                    'code' => 200,
+                    'message' => "Success",
+                    'data'=>[
+                        'products'=>$products
+                    ]
+                ]);
+            }
+        }
+        return response([
+            'code' => 1002,
+            'message' => 'Parameter is no enough',
+        ]);
+    }
+    public function getProductBuySuccess(Request $request){
+        $idCustomer = $request->input('customer_id');
+        if(!empty($idCustomer)){
+            $products  = Product::select('id','image','name','price')->where('customer_id',$idCustomer)->where('is_sold',2)->get();
+            if($products){
+                return response([
+                    'code' => 200,
+                    'message' => "Success",
+                    'data'=>[
+                        'products'=>$products
+                    ]
+                ]);
+            }
+        }
+        return response([
+            'code' => 1002,
+            'message' => 'Parameter is no enough',
+        ]);
+    }
 }
