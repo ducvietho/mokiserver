@@ -35,6 +35,7 @@ Route::post('/product/sell/processing','ProductController@getProductSellProcessi
 Route::post('/product/sell/success','ProductController@getProductSellSuccess');
 Route::post('/product/buy/processing','ProductController@getProductBuyProcessing');
 Route::post('/product/buy/success','ProductController@getProductBuySuccess');
+Route::post('/product/search','ProductController@searchProducts');
 Route::group(['prefix' => 'conversation'], function () {
     Route::post('messages', 'ConversationController@getMessagesConversation');
     Route::post('set_message', 'ConversationController@setMessageConversation');
@@ -54,4 +55,6 @@ Route::group(['prefix' => 'upload/image'], function () {
 });
 Route::group(['prefix'=>'news'],function (){
    Route::post('get','NewsController@getNews');
+   Route::post('detail','NewsController@getNewsDetail');
 });
+Route::post('/fcmtoken/create','FCMTokenController@createToken');

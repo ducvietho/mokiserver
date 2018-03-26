@@ -14,4 +14,13 @@ class NewsController extends Controller
             'data'=>$news
         ]);
     }
+    public function getNewsDetail(Request $request){
+        $idNews = $request->input('news_id');
+        $news = News::where('id',$idNews)->get();
+        return response([
+            'code'=>200,
+            'message'=>'Success',
+            'data'=>$news
+        ]);
+    }
 }

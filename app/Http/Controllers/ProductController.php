@@ -96,7 +96,7 @@ class ProductController extends Controller
     {
         $idProduct = $request->input('id_product');
         $idUser = $request->input('id_user');
-        $product = Product::select('id', 'name', 'seller_id', 'image', 'price', 'category_id', 'described', 'ships_from', 'dimension', 'weight', 'status', 'is_sold', 'created_at')->where('id', $idProduct)->first();
+        $product = Product::select('id', 'name', 'seller_id', 'image', 'price', 'category_id', 'described','address', 'ships_from', 'dimension', 'weight', 'status', 'is_sold', 'created_at')->where('id', $idProduct)->first();
 
         $likeNumber = Like::where('product_id', $product->id)->count();
         $product->like = $likeNumber;
@@ -206,10 +206,11 @@ class ProductController extends Controller
                 'category_id'=>$idCategory,
                 'image'=>$image,
                 'described'=>$descri,
-                'ships_from'=>$address,
+                'address'=>$address,
                 'dimension'=>$dimen,
                 'weight'=>$weight,
-                'status'=>$status
+                'status'=>$status,
+                'ships_from'=>''
             ]);
             if($product){
                 return response([
@@ -232,10 +233,12 @@ class ProductController extends Controller
     public function buyProduct(Request $request){
         $idProduct = $request->input('product_id');
         $idCustomer = $request->input('customer_id');
+        $ship_address = $request->input('ship_address');
         if(!empty($idProduct)&&!empty($idCustomer)){
             $product = Product::where('id',$idProduct)->update([
                 'customer_id'=>$idCustomer,
-                'is_sold'=>1
+                'is_sold'=>1,
+                'ships_from'=>$ship_address
             ]);
             if($product){
                 return response([
@@ -361,5 +364,61 @@ class ProductController extends Controller
             'code' => 1002,
             'message' => 'Parameter is no enough',
         ]);
+    }
+    public function searchProducts(Request $request){
+        $nameProduct = $request->input('name_product');
+        $idUser = $request->input('user_id');
+        $price = $request->input('price');
+
+        if(!empty($nameProduct)&&!empty($price)){
+            $arrayPrice = explode('-',$price);
+            $min = str_replace('K','',$arrayPrice[0]);
+            $min = (int)str_replace(',','',$min);
+            $min = $min*1000;
+            $max = str_replace('K','',$arrayPrice[1]);
+            $max = (int)str_replace(',','',$max);
+            $max = $max*1000;
+
+            $arrayName = explode(' ',$nameProduct);
+            $queryName = '';
+            foreach ($arrayName as $item){
+                $queryName = $queryName.'%'.$item;
+            }
+            $queryName = $queryName.'%';
+            $products = Product::query()->select('id', 'name', 'image', 'price')->where('name','like',$queryName)->orWhere('described','like',$queryName)->whereBetween('price',[$min,$max])->get();
+            if(!empty($idUser)){
+                foreach ($products as $product) {
+                    $likeNumber = Like::where('product_id', $product->id)->count();
+                    $product->like = $likeNumber;
+                    $commentNumber = Comment::where('product_id', $product->id)->count();
+                    $product->comments = $commentNumber;
+                    if (Like::where('product_id', $product->id)->where('user_id', $idUser)->first()) {
+                        $product->is_liked = 1;
+                    } else {
+                        $product->is_liked = 0;
+                    }
+                    $seller = User::where('id', $idUser)->get()->first();
+
+                    $product->seller = [
+                        'id' => $seller->id,
+                        'name' => $seller->name,
+                        'avatar' => $seller->avatar
+                    ];
+            }
+
+            }
+            return response([
+                'code' => 200,
+                'message' => "Success",
+                'data' => [
+                    'products' => $products
+                ]
+            ]);
+        }
+        return response([
+            'code' => 1002,
+            'message' => 'Parameter is no enough',
+        ]);
+
     }
 }
