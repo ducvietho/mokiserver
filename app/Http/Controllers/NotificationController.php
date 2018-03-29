@@ -53,6 +53,11 @@ class NotificationController extends Controller
             $notifications = Notification::where('to_id', $idUser)->where('type', 1)->get();
             foreach ($notifications as $notification){
                 $product = Product::find($notification->product_id);
+                if($product->seller_id==$idUser){
+                    $notification->is_seller = 1;
+                }else{
+                    $notification->is_seller = 0;
+                }
                 $notification->image = $product->image;
             }
             return response([
