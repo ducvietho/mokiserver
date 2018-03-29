@@ -58,3 +58,8 @@ Route::group(['prefix'=>'news'],function (){
    Route::post('detail','NewsController@getNewsDetail');
 });
 Route::post('/fcmtoken/create','FCMTokenController@createToken');
+Route::post('/push_notification','NotificationController@pushNotification');
+Route::group(['prefix'=>'notification'],function (){
+    Route::post('/','NotificationController@getNotification');
+   Route::post('/message','NotificationController@getMessageNotification');
+});

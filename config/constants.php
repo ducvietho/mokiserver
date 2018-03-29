@@ -1,4 +1,4 @@
 <?php
 return array(
-    'SERVER_KEY' => 'administrator'
+    'SERVER_KEY' => 'AAAA82LFGY0:APA91bHztFUicN0B0pbL8kyN-PM3bkXFfrKpuo9HT1JABuVghlTJSJwL9CPhVbEtX2JPls3a-yWNXJWn-PJMXp-J2F-wJcGe2AgQGhH730ruQuoglDcEZxyFI0Mv3jc6wUqh9i1YcgzF'
 );

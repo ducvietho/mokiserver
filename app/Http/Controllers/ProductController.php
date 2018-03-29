@@ -108,7 +108,7 @@ class ProductController extends Controller
             $product->is_liked = 0;
         }
         $seller = User::where('id', $product->seller_id)->get()->first();
-        $numberProductByUser = Product::where('seller_id', $idUser)->count();
+        $numberProductByUser = Product::where('seller_id', $product->seller_id)->count();
 
         $category = Category::select('name')->where('id', $product->category_id)->first();
         $product->category_name = $category->name;
@@ -131,34 +131,55 @@ class ProductController extends Controller
     {
         $idUser = $request->input('user_id');
         $idSeller = $request->input('seller_id');
-        if(!empty($idSeller)&&!empty($idUser)){
+        if(!empty($idSeller)){
             $products = Product::select('id', 'name', 'image', 'price')->where('seller_id', $idSeller)->get();
-            foreach ($products as $product) {
-                $likeNumber = Like::where('product_id', $product->id)->count();
-                $product->like = $likeNumber;
-                $commentNumber = Comment::where('product_id', $product->id)->count();
-                $product->comments = $commentNumber;
-                if (Like::where('product_id', $product->id)->where('user_id', $idUser)->first()) {
-                    $product->is_liked = 1;
-                } else {
-                    $product->is_liked = 0;
+            if(!empty($idUser)){
+                foreach ($products as $product) {
+                    $likeNumber = Like::where('product_id', $product->id)->count();
+                    $product->like = $likeNumber;
+                    $commentNumber = Comment::where('product_id', $product->id)->count();
+                    $product->comments = $commentNumber;
+                    if (Like::where('product_id', $product->id)->where('user_id', $idUser)->first()) {
+                        $product->is_liked = 1;
+                    } else {
+                        $product->is_liked = 0;
+                    }
+                    $seller = User::where('id', $idSeller)->get()->first();
+
+                    $product->seller = [
+                        'id' => $seller->id,
+                        'name' => $seller->name,
+                        'avatar' => $seller->avatar
+                    ];
+
                 }
-                $seller = User::where('id', $idUser)->get()->first();
+                return response([
+                    'code' => 200,
+                    'message' => "Success",
+                    'data' => [
+                        'products' => $products
+                    ]
+                ]);
+            }else{
+                foreach ($products as $product) {
+                    $seller = User::where('id', $idSeller)->get()->first();
+                    $product->seller = [
+                        'id' => $seller->id,
+                        'name' => $seller->name,
+                        'avatar' => $seller->avatar
+                    ];
 
-                $product->seller = [
-                    'id' => $seller->id,
-                    'name' => $seller->name,
-                    'avatar' => $seller->avatar
-                ];
-
+                }
+                return response([
+                    'code' => 200,
+                    'message' => "Success",
+                    'data' => [
+                        'products' => $products
+                    ]
+                ]);
             }
-            return response([
-                'code' => 200,
-                'message' => "Success",
-                'data' => [
-                    'products' => $products
-                ]
-            ]);
+
+
         }
         return response([
             'code' => 1002,
