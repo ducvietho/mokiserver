@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Model\FCMToken;
 use App\Model\Like;
 use App\Model\Product;
+use App\Model\Notification;
 use App\User;
 use Illuminate\Http\Request;
 
@@ -31,7 +32,7 @@ class LikeController extends Controller
             Notification::create([
                 'product_id'=>$idProduct,
                 'title'=>$user->name.' đã like về '.$product->name.' của bạn',
-                'type'=>0,
+                'type'=>1,
                 'from_id'=>$idUser,
                 'to_id'=>$product->seller_id
             ]);

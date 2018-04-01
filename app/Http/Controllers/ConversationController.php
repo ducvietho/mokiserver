@@ -8,6 +8,7 @@ use App\Model\Message;
 use App\Model\Product;
 use App\User;
 use Illuminate\Http\Request;
+use App\Model\Notification;
 
 class ConversationController extends Controller
 {
@@ -106,7 +107,7 @@ class ConversationController extends Controller
             $user = User::find($idSender);
             if($idSender ==$product->seller_id){
                 $customer = User::find($conversation->user_id2);
-                $token = FCMToken::find($customer);
+                $token = FCMToken::find($customer->id);
                 $key = $token->token;
                 $msg = array(
                     'body' => $user->name.' đã nhắn tin về '.$product->name.' của '.$user->name,
@@ -118,7 +119,7 @@ class ConversationController extends Controller
                 Notification::create([
                     'product_id'=>$product->id,
                     'title'=>$user->name.' đã nhắn tin về '.$product->name.' của '.$user->name,
-                    'type'=>1,
+                    'type'=>2,
                     'from_id'=>$idSender,
                     'to_id'=>$customer->id
                 ]);

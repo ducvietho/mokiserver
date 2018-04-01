@@ -50,7 +50,8 @@ class NotificationController extends Controller
     {
         $idUser = $request->input('user_id');
         if (!empty($idUser)) {
-            $notifications = Notification::where('to_id', $idUser)->where('type', 1)->get();
+            $notifications = Notification::query()->where('to_id', $idUser)->where('type', '=',2)
+                ->orderBy('id','desc')->get();
             foreach ($notifications as $notification){
                 $product = Product::find($notification->product_id);
                 if($product->seller_id==$idUser){
@@ -77,7 +78,9 @@ class NotificationController extends Controller
     {
         $idUser = $request->input('user_id');
         if (!empty($idUser)) {
-            $notifications = Notification::where('to_id', $idUser)->where('type', 0)->get();
+            $notifications = Notification::query()->where('to_id', $idUser)->where('type', '!=',2)
+
+                ->orderBy('id','desc')->get();
             foreach ($notifications as $notification){
                 $product = Product::find($notification->product_id);
                 $notification->image = $product->image;
@@ -86,6 +89,85 @@ class NotificationController extends Controller
                 'code' => 200,
                 'message' => "Success",
                 'data' => $notifications
+            ]);
+
+        }
+        return response([
+            'code' => 1002,
+            'message' => 'Parameter is no enough',
+        ]);
+    }
+    public function countMessageNotificationUnread(Request $request){
+        $idUser = $request->input('user_id');
+        if (!empty($idUser)) {
+            $count = Notification::query()->where('to_id', $idUser)->where('read','=',0)
+                ->where('type', '=',2)
+                ->count();
+
+            return response([
+                'code' => 200,
+                'message' => "Success",
+                'number' => $count
+            ]);
+
+        }
+        return response([
+            'code' => 1002,
+            'message' => 'Parameter is no enough',
+        ]);
+    }
+    public function countNotificationUnread(Request $request){
+        $idUser = $request->input('user_id');
+        if (!empty($idUser)) {
+            $count = Notification::query()->where('to_id', $idUser)->where('type', '!=',2)
+               ->where('read','=',0)
+                ->count();
+            return response([
+                'code' => 200,
+                'message' => "Success",
+                'number' => $count
+            ]);
+
+        }
+        return response([
+            'code' => 1002,
+            'message' => 'Parameter is no enough',
+        ]);
+    }
+    public function setReadNotification(Request $request){
+        $idUser = $request->input('user_id');
+        if (!empty($idUser)) {
+            $read = Notification::query()->where('to_id', $idUser)->where('type','=',1)
+                ->orWhere('type','=',0)->where('read','=',0)->update([
+                    'read'=>1
+                ]);
+            if($read){
+                return response([
+                    'code' => 200,
+                    'message' => "Success",
+
+                ]);
+            }
+
+
+        }
+        return response([
+            'code' => 1002,
+            'message' => 'Parameter is no enough',
+        ]);
+    }
+    public function setReadMessageNotification(Request $request){
+        $idMessage = $request->input('notification_id');
+        if (!empty($idMessage)) {
+            $read = Notification::query()->where('id',$idMessage )
+                ->update([
+                    'read'=>1
+                ]);
+
+            return response([
+                'code' => 200,
+                'message' => "Success",
+
             ]);
 
         }

@@ -61,5 +61,9 @@ Route::post('/fcmtoken/create','FCMTokenController@createToken');
 Route::post('/push_notification','NotificationController@pushNotification');
 Route::group(['prefix'=>'notification'],function (){
     Route::post('/','NotificationController@getNotification');
-   Route::post('/message','NotificationController@getMessageNotification');
+    Route::post('/message','NotificationController@getMessageNotification');
+    Route::post('/unread','NotificationController@countNotificationUnread');
+    Route::post('/message/unread','NotificationController@countMessageNotificationUnread');
+    Route::post('/set_read','NotificationController@setReadNotification');
+    Route::post('/message/set_read','NotificationController@setReadMessageNotification');
 });
