@@ -109,21 +109,31 @@ class ConversationController extends Controller
                 $customer = User::find($conversation->user_id2);
                 $token = FCMToken::find($customer->id);
                 $key = $token->token;
-                $msg = array(
-                    'body' => $user->name.' đã nhắn tin về '.$product->name.' của '.$user->name,
-                    'title' => 'Moki',
-                    'icon' => 'myicon',
-                    'sound' => 1
-                );
-                app('App\Http\Controllers\NotificationController')->pushNotification($key, $msg);
-                Notification::create([
+                 $notifi = Notification::create([
                     'product_id'=>$product->id,
                     'title'=>$user->name.' đã nhắn tin về '.$product->name.' của '.$user->name,
                     'type'=>2,
                     'from_id'=>$idSender,
                     'to_id'=>$customer->id
                 ]);
+                $msg = array(
+                    'body' => $user->name.' đã nhắn tin về '.$product->name.' của '.$user->name,
+                    'title' => 'Moki',
+                    'icon' => 'myicon',
+                    'sound' => 1,
+
+                );
+                app('App\Http\Controllers\NotificationController')->pushNotification($key, $msg,json_encode($notifi));
+
             }else{
+
+                $notifi = Notification::create([
+                    'product_id'=>$product->id,
+                    'title'=>$user->name.' đã nhắn tin về '.$product->name.' của bạn',
+                    'type'=>1,
+                    'from_id'=>$idSender,
+                    'to_id'=>$product->seller_id
+                ]);
                 $token = FCMToken::find($product->seller_id);
                 $key = $token->token;
                 $msg = array(
@@ -132,15 +142,8 @@ class ConversationController extends Controller
                     'icon' => 'myicon',
                     'sound' => 1
                 );
-                app('App\Http\Controllers\NotificationController')->pushNotification($key, $msg);
+                app('App\Http\Controllers\NotificationController')->pushNotification($key, $msg,json_encode($notifi));
 
-                Notification::create([
-                    'product_id'=>$product->id,
-                    'title'=>$user->name.' đã nhắn tin về '.$product->name.' của bạn',
-                    'type'=>1,
-                    'from_id'=>$idSender,
-                    'to_id'=>$product->seller_id
-                ]);
             }
 
             $message = Message::create([

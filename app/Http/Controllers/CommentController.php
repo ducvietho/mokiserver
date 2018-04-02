@@ -50,28 +50,27 @@ class CommentController extends Controller
         $user = User::find($idUser);
         $product = Product::find($idProduct);
         $seller = User::find($product->seller_id);
-        $msg = array(
-            'body' => $user->name.' đã bình luận về '.$product->name.' của '.$seller->name,
-            'title' => 'Moki',
-            'icon' => 'myicon',
-            'sound' => 1
-        );
+
         $idComments = Comment::query()->select('poster_id')->where('product_id',$idProduct)
             ->where('poster_id','!=',$idUser)->distinct()->get();
-        $tokens = array();
+
         foreach ($idComments as $comment){
             $token = FCMToken::query()->where('user_id',$comment->poster_id)->first();
-            array_push($tokens,$token->token);
-        }
-        app('App\Http\Controllers\NotificationController')->pushNotification($tokens, $msg);
-        foreach ($idComments as $comment){
-            Notification::create([
+            $notifi = Notification::create([
                 'product_id'=>$idProduct,
                 'title'=>$user->name.' đã bình luận về '.$product->name.' của '.$seller->name,
                 'type'=>0,
                 'from_id'=>$idUser,
                 'to_id'=>$comment->poster_id
             ]);
+            $msg = array(
+                'body' => $user->name.' đã bình luận về '.$product->name.' của '.$seller->name,
+                'title' => 'Moki',
+                'icon' => 'myicon',
+                'sound' => 1,
+
+            );
+            app('App\Http\Controllers\NotificationController')->pushNotification($token->token, $msg,json_encode($notifi));
         }
         if(!empty($comment)){
             if($lastId>0){
