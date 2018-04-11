@@ -116,6 +116,7 @@ class ConversationController extends Controller
                     'from_id'=>$idSender,
                     'to_id'=>$customer->id
                 ]);
+                 $notifi->is_seller=0;
                 $msg = array(
                     'body' => $user->name.' đã nhắn tin về '.$product->name.' của '.$user->name,
                     'title' => 'Moki',
@@ -130,10 +131,11 @@ class ConversationController extends Controller
                 $notifi = Notification::create([
                     'product_id'=>$product->id,
                     'title'=>$user->name.' đã nhắn tin về '.$product->name.' của bạn',
-                    'type'=>1,
+                    'type'=>2,
                     'from_id'=>$idSender,
                     'to_id'=>$product->seller_id
                 ]);
+                $notifi->is_seller = 1;
                 $token = FCMToken::find($product->seller_id);
                 $key = $token->token;
                 $msg = array(
