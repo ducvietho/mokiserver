@@ -148,6 +148,7 @@ return [
         Illuminate\View\ViewServiceProvider::class,
         Tymon\JWTAuth\Providers\JWTAuthServiceProvider::class,
         Tzsk\Sms\Provider\SmsServiceProvider::class,
+        Softon\Sms\SmsServiceProvider::class,
         /*
          * Package Service Providers...
          */
@@ -211,6 +212,7 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
         'JWTAuth' => Tymon\JWTAuth\Facades\JWTAuth::class,
         'Sms' => Tzsk\Sms\Facade\Sms::class,
+        'Sms' => Softon\Sms\Facades\Sms::class,
     ],
 
 ];

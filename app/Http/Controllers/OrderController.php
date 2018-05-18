@@ -11,7 +11,7 @@ class OrderController extends Controller
     public function getOrderDeatail(Request $request){
         $idProduct = $request->input('product_id');
         if(!empty($idProduct)){
-            $product = Product::select('id','image','name','price','customer_id')->where('id',$idProduct)->first();
+            $product = Product::select('id','image','name','price','customer_id','ships_from')->where('id',$idProduct)->first();
             $buyer = User::find($product->customer_id);
             $product->buyer = $buyer;
             return response([

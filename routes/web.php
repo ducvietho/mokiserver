@@ -68,3 +68,4 @@ Route::group(['prefix'=>'notification'],function (){
     Route::post('/message/set_read','NotificationController@setReadMessageNotification');
 });
 Route::post('/order/detail','OrderController@getOrderDeatail');
+Route::get('/sms','SMSController@otpVerify');

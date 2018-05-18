@@ -403,10 +403,12 @@ class ProductController extends Controller
             $arrayName = explode(' ',$nameProduct);
             $queryName = '';
             foreach ($arrayName as $item){
-                $queryName = $queryName.'%'.$item;
+                $queryName = $queryName.'% '.$item.' ';
             }
             $queryName = $queryName.'%';
-            $products = Product::query()->select('id', 'name', 'image', 'price')->where('name','like',$queryName)->orWhere('described','like',$queryName)->whereBetween('price',[$min,$max])->get();
+            $products = Product::query()->select('id', 'name', 'image', 'price')->where(function ($query) use ($queryName){
+              $query ->where('name','like',$queryName)->orWhere('described','like',$queryName);
+            })->whereBetween('price',[$min,$max])->get();
             if(!empty($idUser)){
                 foreach ($products as $product) {
                     $likeNumber = Like::where('product_id', $product->id)->count();
