@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Model\Comment;
 use App\Model\Like;
+use App\Model\OrderProduct;
 use App\Model\Product;
 use App\Model\Category;
 use App\User;
 use Illuminate\Pagination\Paginator;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -96,8 +98,13 @@ class ProductController extends Controller
     {
         $idProduct = $request->input('id_product');
         $idUser = $request->input('id_user');
-        $product = Product::select('id', 'name', 'seller_id', 'image', 'price', 'category_id', 'described','address', 'ships_from', 'dimension', 'weight', 'status', 'is_sold', 'created_at')->where('id', $idProduct)->first();
-
+        $product = Product::select('id', 'name', 'seller_id', 'image', 'price', 'category_id', 'described','address', 'dimension', 'weight', 'status', 'created_at')->where('id', $idProduct)->first();
+        $order = OrderProduct::where('product_id',$idProduct)->first();
+        if(empty($order)){
+            $product->is_sold=0;
+        }else{
+            $product->is_sold=$order->type;
+        }
         $likeNumber = Like::where('product_id', $product->id)->count();
         $product->like = $likeNumber;
         $commentNumber = Comment::where('product_id', $product->id)->count();
@@ -255,13 +262,14 @@ class ProductController extends Controller
         $idProduct = $request->input('product_id');
         $idCustomer = $request->input('customer_id');
         $ship_address = $request->input('ship_address');
-        if(!empty($idProduct)&&!empty($idCustomer)){
-            $product = Product::where('id',$idProduct)->update([
+        if(!empty($idProduct)&&!empty($idCustomer)&& !empty($ship_address)){
+            $order = OrderProduct::create([
                 'customer_id'=>$idCustomer,
-                'is_sold'=>1,
-                'ships_from'=>$ship_address
+                'product_id'=>$idProduct,
+                'address'=>$ship_address,
+                'type'=>1
             ]);
-            if($product){
+            if($order){
                 return response([
                     'code' => 200,
                     'message' => "Success",
@@ -276,8 +284,8 @@ class ProductController extends Controller
     public function sellProduct(Request $request){
         $idProduct = $request->input('product_id');
         if(!empty($idProduct)){
-            $product = Product::where('id',$idProduct)->update([
-                'is_sold'=>2
+            $product = OrderProduct::where('product_id',$idProduct)->update([
+                'type'=>2
             ]);
             if($product){
                 return response([
@@ -294,10 +302,7 @@ class ProductController extends Controller
     public function cancelSellProduct(Request $request){
         $idProduct = $request->input('product_id');
         if(!empty($idProduct)){
-            $product = Product::where('id',$idProduct)->update([
-                'is_sold'=>0,
-                'customer_id'=>0
-            ]);
+            $product = OrderProduct::where('product_id',$idProduct)->delete();
             if($product){
                 return response([
                     'code' => 200,
@@ -313,7 +318,11 @@ class ProductController extends Controller
     public function getProductSellProcessing(Request $request){
         $idSeller = $request->input('user_id');
         if(!empty($idSeller)){
-            $products  = Product::select('id','image','name','price')->where('seller_id',$idSeller)->where('is_sold',1)->get();
+            $products = DB::table('order_product')->join('product','order_product.product_id','=','product.id')
+                                            ->select('product.id','product.image','product.name','product.price')
+                                            ->where('order_product.type','1')->where('product.seller_id',$idSeller)->get();
+
+            //$products  = Product::select('id','image','name','price')->where('seller_id',$idSeller)->where('is_sold',1)->get();
             if($products){
                 return response([
                     'code' => 200,
@@ -332,7 +341,10 @@ class ProductController extends Controller
     public function getProductSellSuccess(Request $request){
         $idSeller = $request->input('user_id');
         if(!empty($idSeller)){
-            $products  = Product::select('id','image','name','price')->where('seller_id',$idSeller)->where('is_sold',2)->get();
+            $products = DB::table('order_product')->join('product','order_product.product_id','=','product.id')
+                ->select('product.id','product.image','product.name','product.price')
+                ->where('order_product.type','2')->where('product.seller_id',$idSeller)->get();
+
             if($products){
                 return response([
                     'code' => 200,
@@ -351,7 +363,10 @@ class ProductController extends Controller
     public function getProductBuyProcessing(Request $request){
         $idCustomer = $request->input('customer_id');
         if(!empty($idCustomer)){
-            $products  = Product::select('id','image','name','price')->where('customer_id',$idCustomer)->where('is_sold',1)->get();
+            $products = DB::table('order_product')->join('product','order_product.product_id','=','product.id')
+                ->select('product.id','product.image','product.name','product.price')
+                ->where('order_product.type','1')->where('order_product.customer_id',$idCustomer)->get();
+
             if($products){
                 return response([
                     'code' => 200,
@@ -370,7 +385,9 @@ class ProductController extends Controller
     public function getProductBuySuccess(Request $request){
         $idCustomer = $request->input('customer_id');
         if(!empty($idCustomer)){
-            $products  = Product::select('id','image','name','price')->where('customer_id',$idCustomer)->where('is_sold',2)->get();
+            $products = DB::table('order_product')->join('product','order_product.product_id','=','product.id')
+                ->select('product.id','product.image','product.name','product.price')
+                ->where('order_product.type','2')->where('order_product.customer_id',$idCustomer)->get();
             if($products){
                 return response([
                     'code' => 200,
@@ -386,30 +403,29 @@ class ProductController extends Controller
             'message' => 'Parameter is no enough',
         ]);
     }
-    public function searchProducts(Request $request){
+    public function searchProducts(Request $request)
+    {
         $nameProduct = $request->input('name_product');
         $idUser = $request->input('user_id');
         $price = $request->input('price');
 
-        if(!empty($nameProduct)&&!empty($price)){
-            $arrayPrice = explode('-',$price);
-            $min = str_replace('K','',$arrayPrice[0]);
-            $min = (int)str_replace(',','',$min);
-            $min = $min*1000;
-            $max = str_replace('K','',$arrayPrice[1]);
-            $max = (int)str_replace(',','',$max);
-            $max = $max*1000;
+        if (!empty($nameProduct) && !empty($price)) {
+            $arrayPrice = explode('-', $price);
+            $min = str_replace('K', '', $arrayPrice[0]);
+            $min = (int)str_replace(',', '', $min);
+            $min = $min * 1000;
+            $max = str_replace('K', '', $arrayPrice[1]);
+            $max = (int)str_replace(',', '', $max);
+            $max = $max * 1000;
 
-            $arrayName = explode(' ',$nameProduct);
+            $arrayName = explode(' ', $nameProduct);
             $queryName = '';
-            foreach ($arrayName as $item){
-                $queryName = $queryName.'% '.$item.' ';
+            foreach ($arrayName as $item) {
+                $queryName = $queryName . '% ' . $item . ' ';
             }
-            $queryName = $queryName.'%';
-            $products = Product::query()->select('id', 'name', 'image', 'price')->where(function ($query) use ($queryName){
-              $query ->where('name','like',$queryName)->orWhere('described','like',$queryName);
-            })->whereBetween('price',[$min,$max])->get();
-            if(!empty($idUser)){
+            $queryName = $queryName . '%';
+            $products = Product::query()->select('id', 'name', 'image', 'price')->where('name', 'like', $queryName)->orWhere('described', 'like', $queryName)->whereBetween('price', [$min, $max])->get();
+            if (!empty($idUser)) {
                 foreach ($products as $product) {
                     $likeNumber = Like::where('product_id', $product->id)->count();
                     $product->like = $likeNumber;
@@ -427,7 +443,7 @@ class ProductController extends Controller
                         'name' => $seller->name,
                         'avatar' => $seller->avatar
                     ];
-            }
+                }
 
             }
             return response([
@@ -437,11 +453,12 @@ class ProductController extends Controller
                     'products' => $products
                 ]
             ]);
-        }
-        return response([
-            'code' => 1002,
-            'message' => 'Parameter is no enough',
-        ]);
 
+            return response([
+                'code' => 1002,
+                'message' => 'Parameter is no enough',
+            ]);
+
+        }
     }
 }
