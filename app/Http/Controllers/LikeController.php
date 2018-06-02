@@ -21,6 +21,11 @@ class LikeController extends Controller
         ]);
         $product = Product::find($idProduct);
         $user = User::find($idUser);
+        $notification = Notification::where('product_id',$idProduct)->where('type',1)->where('from_id',$idUser)->get();
+        if(!empty($notification)){
+            foreach ($notification as $value)
+                $result = $value->delete();
+        }
         $token = FCMToken::find($idUser);
         $key = $token->token;
         if ($idUser != $product->seller_id) {
@@ -29,7 +34,8 @@ class LikeController extends Controller
                 'title' => $user->name . ' đã like về ' . $product->name . ' của bạn',
                 'type' => 1,
                 'from_id' => $idUser,
-                'to_id' => $product->seller_id
+                'to_id' => $product->seller_id,
+                'read'=> 0
             ]);
             $msg = array(
                 'body' => $user->name . ' đã thích về ' . $product->name . ' của bạn',

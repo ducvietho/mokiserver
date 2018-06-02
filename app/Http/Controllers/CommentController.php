@@ -47,6 +47,11 @@ class CommentController extends Controller
             'poster_id'=>$idUser,
             'content'=>$content
         ]);
+        $notification = Notification::where('product_id',$idProduct)->where('type',0)->where('from_id',$idUser)->get();
+        if(!empty($notification)){
+            foreach ($notification as $value)
+                $result = $value->delete();
+        }
         $user = User::find($idUser);
         $product = Product::find($idProduct);
         $seller = User::find($product->seller_id);
@@ -61,7 +66,8 @@ class CommentController extends Controller
                 'title'=>$user->name.' đã bình luận về '.$product->name.' của '.$seller->name,
                 'type'=>0,
                 'from_id'=>$idUser,
-                'to_id'=>$comment->poster_id
+                'to_id'=>$comment->poster_id,
+                'read'=>0
             ]);
             $msg = array(
                 'body' => $user->name.' đã bình luận về '.$product->name.' của '.$seller->name,

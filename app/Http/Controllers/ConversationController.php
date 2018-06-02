@@ -105,18 +105,24 @@ class ConversationController extends Controller
             $conversation = Conversation::find($idConversation);
             $product = Product::find($conversation->product_id);
             $user = User::find($idSender);
+            $notification = Notification::where('product_id',$conversation->product_id)->where('type',2)->where('from_id',$idSender)->get();
+            if(!empty($notification)){
+                foreach ($notification as $value)
+                $result = $value->delete();
+            }
             if($idSender ==$product->seller_id){
                 $customer = User::find($conversation->user_id2);
                 $token = FCMToken::find($customer->id);
                 $key = $token->token;
-                 $notifi = Notification::create([
+                $notifi = Notification::create([
                     'product_id'=>$product->id,
                     'title'=>$user->name.' đã nhắn tin về '.$product->name.' của '.$user->name,
                     'type'=>2,
                     'from_id'=>$idSender,
-                    'to_id'=>$customer->id
+                    'to_id'=>$customer->id,
+                     'read'=>0
                 ]);
-                 $notifi->is_seller=0;
+                $notifi->is_seller=0;
                 $msg = array(
                     'body' => $user->name.' đã nhắn tin về '.$product->name.' của '.$user->name,
                     'title' => 'Moki',
@@ -133,7 +139,8 @@ class ConversationController extends Controller
                     'title'=>$user->name.' đã nhắn tin về '.$product->name.' của bạn',
                     'type'=>2,
                     'from_id'=>$idSender,
-                    'to_id'=>$product->seller_id
+                    'to_id'=>$product->seller_id,
+                    'read'=>0
                 ]);
                 $notifi->is_seller = 1;
                 $token = FCMToken::find($product->seller_id);
